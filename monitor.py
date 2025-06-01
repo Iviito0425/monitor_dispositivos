@@ -12,7 +12,8 @@ async def get_devices():
 
 async def update_status(device_id, is_online):
     async with aiosqlite.connect(DB_PATH) as db:
-        now = datetime.utcnow().isoformat()
+        from datetime import datetime
+        now = datetime.now().isoformat()
         await db.execute(
             "UPDATE devices SET is_online = ?, last_ping = ? WHERE id = ?",
             (is_online, now, device_id)
