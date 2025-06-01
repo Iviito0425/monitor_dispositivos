@@ -3,14 +3,11 @@ import axios from 'axios';
 import DeviceForm from './DeviceForm';
 import EditDeviceForm from './EditDeviceForm';
 import Papa from 'papaparse';
-import 'bootstrap-icons/font/bootstrap-icons.css';
 
 function App() {
   const [devices, setDevices] = useState([]);
   const [editingDevice, setEditingDevice] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState("name");
-  const [sortAsc, setSortAsc] = useState(true);
 
   const fetchDevices = async () => {
     try {
@@ -49,89 +46,65 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSort = (field) => {
-    if (sortField === field) setSortAsc(!sortAsc);
-    else {
-      setSortField(field);
-      setSortAsc(true);
-    }
-  };
-
   const getIcon = (type) => {
     switch (type.toLowerCase()) {
-      case "router": return <i className="bi bi-hdd-network"></i>;
-      case "pc": return <i className="bi bi-pc-display"></i>;
-      case "phone": return <i className="bi bi-phone"></i>;
-      case "tv": return <i className="bi bi-tv"></i>;
-      default: return <i className="bi bi-box"></i>;
+      case "router": return "📡";
+      case "pc": return "🖥️";
+      case "phone": return "📱";
+      case "tv": return "📺";
+      default: return "📦";
     }
   };
 
-  const total = devices.length;
-  const online = devices.filter(d => d.is_online).length;
-  const offline = total - online;
-
-  const filteredDevices = devices
+  const groupedByLocation = devices
     .filter((dev) =>
       Object.values(dev).join(" ").toLowerCase().includes(searchTerm)
     )
-    .sort((a, b) => {
-      const valA = a[sortField] || "";
-      const valB = b[sortField] || "";
-      return typeof valA === "string"
-        ? sortAsc
-          ? valA.localeCompare(valB)
-          : valB.localeCompare(valA)
-        : sortAsc
-        ? valA - valB
-        : valB - valA;
-    });
+    .reduce((acc, dev) => {
+      const loc = dev.location || "Sin ubicación";
+      if (!acc[loc]) acc[loc] = [];
+      acc[loc].push(dev);
+      return acc;
+    }, {});
 
-  const groupedByLocation = filteredDevices.reduce((acc, dev) => {
-    const loc = dev.location || "Sin ubicación";
-    if (!acc[loc]) acc[loc] = [];
-    acc[loc].push(dev);
-    return acc;
-  }, {});
+  const online = devices.filter(d => d.is_online).length;
+  const offline = devices.length - online;
 
   return (
-    <div className="container mt-4">
-      <h1 className="mb-4">📡 Monitor de Dispositivos</h1>
+    <div className="bg-gray-900 text-white min-h-screen p-6">
+      <h1 className="text-3xl font-bold text-center mb-6">📡 Monitor de Dispositivos</h1>
 
       {/* RESUMEN */}
-      <div className="row text-center mb-4">
-        <div className="col-md-4">
-          <div className="bg-success text-white rounded p-3">
-            🟢 Online: <strong>{online}</strong>
-          </div>
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-6">
+        <div className="bg-green-600 px-6 py-4 rounded-xl shadow w-full sm:w-auto text-center">
+          🟢 Online: <strong>{online}</strong>
         </div>
-        <div className="col-md-4">
-          <div className="bg-danger text-white rounded p-3">
-            🔴 Offline: <strong>{offline}</strong>
-          </div>
+        <div className="bg-red-600 px-6 py-4 rounded-xl shadow w-full sm:w-auto text-center">
+          🔴 Offline: <strong>{offline}</strong>
         </div>
-        <div className="col-md-4">
-          <div className="bg-primary text-white rounded p-3">
-            🌐 Total: <strong>{total}</strong>
-          </div>
+        <div className="bg-blue-600 px-6 py-4 rounded-xl shadow w-full sm:w-auto text-center">
+          🌐 Total: <strong>{devices.length}</strong>
         </div>
       </div>
 
-      {/* Buscador y exportar */}
-      <div className="d-flex mb-3 gap-2">
+      {/* BUSCADOR + EXPORTAR */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <input
           type="text"
-          className="form-control"
           placeholder="🔍 Buscar dispositivo..."
+          className="flex-1 px-4 py-2 rounded bg-gray-800 text-white border border-gray-600 placeholder-gray-400"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value.toLowerCase())}
         />
-        <button className="btn btn-success" onClick={exportCSV}>
-          <i className="bi bi-download"></i> Exportar CSV
+        <button
+          onClick={exportCSV}
+          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow"
+        >
+          📥 Exportar CSV
         </button>
       </div>
 
-      {/* Formulario */}
+      {/* FORMULARIO */}
       {editingDevice ? (
         <EditDeviceForm
           device={editingDevice}
@@ -145,52 +118,55 @@ function App() {
         <DeviceForm onAdd={fetchDevices} />
       )}
 
-      {/* Secciones por ubicación */}
-      {Object.entries(groupedByLocation).map(([location, group]) => (
-        <div key={location} className="mb-5">
-          <h4 className="mt-4 text-secondary border-bottom pb-2">
-            📍 {location}
-          </h4>
-          <table className="table table-hover mt-3">
-            <thead className="table-dark">
-              <tr>
-                <th onClick={() => handleSort("name")} style={{ cursor: "pointer" }}>Nombre</th>
-                <th onClick={() => handleSort("ip_address")} style={{ cursor: "pointer" }}>IP</th>
-                <th onClick={() => handleSort("device_type")} style={{ cursor: "pointer" }}>Tipo</th>
-                <th onClick={() => handleSort("is_online")} style={{ cursor: "pointer" }}>Estado</th>
-                <th onClick={() => handleSort("last_ping")} style={{ cursor: "pointer" }}>Último Ping</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {group.map((dev) => (
-                <tr key={dev.id}>
-                  <td>{dev.name}</td>
-                  <td>{dev.ip_address}</td>
-                  <td>{getIcon(dev.device_type)} {dev.device_type}</td>
-                  <td className="text-center">
-                    {dev.is_online ? (
-                      <i className="bi bi-circle-fill fs-5" style={{ color: "limegreen" }} title="En línea"></i>
-                   ) : (
-                     <i className="bi bi-circle-fill fs-5" style={{ color: "red" }} title="Fuera de línea"></i>
-                   )}
-                  </td>
-
-                  <td>{dev.last_ping ? new Date(dev.last_ping).toLocaleString() : 'Nunca'}</td>
-                  <td>
-                    <button className="btn btn-sm btn-primary me-1" onClick={() => setEditingDevice(dev)}>
-                      <i className="bi bi-pencil"></i>
+      {/* GRUPOS POR UBICACIÓN */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.entries(groupedByLocation).map(([location, group]) => (
+          <div key={location}>
+            <h3 className="text-xl font-semibold mb-3 border-b border-gray-600 pb-1">
+              📍 {location}
+            </h3>
+            {group.map((dev) => (
+              <div
+                key={dev.id}
+                className={`rounded-xl p-4 mb-4 shadow bg-gray-800 border-l-4 ${
+                  dev.is_online ? "border-green-500" : "border-red-500"
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-lg font-bold">{getIcon(dev.device_type)} {dev.name}</h4>
+                    <p className="text-sm text-gray-400">
+                      <span className="block">IP: {dev.ip_address}</span>
+                      <span className="block">Tipo: {dev.device_type}</span>
+                      <span className="block">
+                        Estado:{" "}
+                        <span className={dev.is_online ? "text-green-400" : "text-red-400"}>
+                          {dev.is_online ? "🟢 Online" : "🔴 Offline"}
+                        </span>
+                      </span>
+                      <span className="block">Último ping: {dev.last_ping ? new Date(dev.last_ping).toLocaleString() : "Nunca"}</span>
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
+                      onClick={() => setEditingDevice(dev)}
+                    >
+                      ✏️
                     </button>
-                    <button className="btn btn-sm btn-outline-danger" onClick={() => deleteDevice(dev.id)}>
-                      <i className="bi bi-trash"></i>
+                    <button
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                      onClick={() => deleteDevice(dev.id)}
+                    >
+                      🗑️
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

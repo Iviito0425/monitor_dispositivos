@@ -1,0 +1,4 @@
+/* SOLO PARA COMPILACIÓN CON TAILWIND - NO IMPORTAR EN INDEX.JS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
