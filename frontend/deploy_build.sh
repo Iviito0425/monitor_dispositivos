@@ -27,5 +27,22 @@ else
     exit 1
 fi
 
-echo "[✔] Script ejecutado con éxito."
+echo "🔄 Reiniciando servicio backend (backend.service)..."
+if sudo systemctl restart backend.service; then
+    echo "[✔] Servicio backend reiniciado correctamente."
+else
+    echo "[✖] Error al reiniciar el servicio backend."
+    echo "[✖] El script no se ha podido ejecutar correctamente."
+    exit 1
+fi
 
+echo "🔄 Reiniciando servicio de monitorización (monitor.service)..."
+if sudo systemctl restart monitor.service; then
+    echo "[✔] Servicio monitor reiniciado correctamente."
+else
+    echo "[✖] Error al reiniciar el servicio monitor."
+    echo "[✖] El script no se ha podido ejecutar correctamente."
+    exit 1
+fi
+
+echo "[✔] Script ejecutado con éxito. Recarga el navegador con Ctrl + Shift + R."
