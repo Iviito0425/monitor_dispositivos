@@ -60,6 +60,11 @@ cd frontend
 ./deploy_build.sh
 
 
+## Acceso a la interfaz web
+
+Una vez desplegado, abre esta dirección en el navegador de cualquier dispositivo conectado a la misma red local: 192.168.1.11:8080 (ajusta la IP si cambias de dispositivo o configuración de red)
+
+
 ### Automatización con systemd
 El proyecto se ejecuta automáticamente al iniciar la Raspberry Pi:
 
