@@ -29,7 +29,8 @@ monitor_dispositivos/
   - Todos los dispositivos
   - Solo los conectados
   - Solo los desconectados
-- Interfaz responsive: búsqueda, agrupación por ubicación, eliminación, edición.
+- Interfaz responsive: búsqueda, agrupación por ubicación, eliminación, **edición completa**.
+- Posibilidad de editar dispositivos existentes desde la interfaz web.
 
 ## 🖥️ Requisitos
 
