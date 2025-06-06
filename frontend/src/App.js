@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DeviceForm from "./DeviceForm.jsx";
+import EditDeviceForm from "./EditDeviceForm.js";
 
 function App() {
   const [devices, setDevices] = useState([]);
@@ -55,11 +56,16 @@ function App() {
         </a>
       </div>
 
-      {editingDevice ? (
-        <p>Función de edición no implementada aún</p>
-      ) : (
-        <DeviceForm onAdd={fetchDevices} />
-      )}
+{editingDevice ? (
+  <EditDeviceForm
+    device={editingDevice}
+    onCancel={() => setEditingDevice(null)}
+    onUpdate={fetchDevices}
+  />
+) : (
+  <DeviceForm onAdd={fetchDevices} />
+)}
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(groupedByLocation).map(([location, group]) => (
